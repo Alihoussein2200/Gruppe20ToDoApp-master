@@ -11,5 +11,9 @@ class TodoRepoImpl(private val database: Database): TodoRepo {
     override suspend fun addTasks(todo: TodoEntity) = dao.addTask(todo)
     override suspend fun updateTasks(todo: TodoEntity) = dao.updateTask(todo)
     override suspend fun deleteTasks(todo: TodoEntity) = dao.deleteTask(todo)
+    override suspend fun getTasksByCompletion(isCompleted: Boolean): Flow<List<TodoEntity>> {
+        return dao.getTasksByCompletionStatus(isCompleted)
+    }
+
 
 }

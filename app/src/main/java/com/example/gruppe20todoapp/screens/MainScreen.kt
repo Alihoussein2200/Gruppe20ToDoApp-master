@@ -41,8 +41,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,12 +71,14 @@ import com.example.gruppe20todoapp.database.addDate
 fun MainScreen(
     viewModel: MainVM = viewModel()
 ) {
+    val (filterCompleted, setFilterCompleted) = remember { mutableStateOf(false) }
 
     val tasks by viewModel.tasks.collectAsState()
 
     val (dialogOpen, setDialogOpen) = remember {
         mutableStateOf(false)
     }
+
     if (dialogOpen) {
         val (title, setTitle) = remember {
             mutableStateOf("")
@@ -142,8 +149,25 @@ fun MainScreen(
         }
     }
 
+
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.secondary,
+        topBar = {
+            TopAppBar(
+                title = { Text("Filter by status", color = Color.White) },
+                modifier = Modifier.shadow(4.dp),
+                        colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.secondary), // Set TopAppBar color to match background
+                actions = {
+                    Switch(
+                        checked = filterCompleted,
+                        onCheckedChange = { isChecked ->
+                            setFilterCompleted(isChecked)
+                            viewModel.getTodosByCompletion(isChecked)
+                        }
+                    )
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -154,7 +178,8 @@ fun MainScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.secondary // Set the background color for the main screen
     ) { paddings ->
         Box(
             modifier = Modifier
@@ -166,7 +191,7 @@ fun MainScreen(
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut()
             ) {
-                Text(text = "Ingen opgaver", color = Color.White, fontSize = 22.sp)
+                Text(text = "Ingen opgaver", fontSize = 22.sp)
             }
             AnimatedVisibility(
                 visible = tasks.isNotEmpty(),
@@ -177,15 +202,14 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
+                            top = 64.dp, // Increased top padding to avoid overlap with TopAppBar
                             bottom = paddings.calculateBottomPadding() + 8.dp,
-                            top = 8.dp,
-                            end = 8.dp,
-                            start = 8.dp
-                        ), verticalArrangement = Arrangement.spacedBy(8.dp)
+                            start = 8.dp,
+                            end = 8.dp
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(tasks.sortedBy { it.done }, key = {
-                        it.id
-                    }) { todo ->
+                    items(tasks.sortedBy { it.done }, key = { it.id }) { todo ->
                         TodoItem(todo = todo, onClick = { viewModel.updateTodo(
                             todo.copy(done = !todo.done)
                         ) }, onDelete = {
@@ -196,16 +220,14 @@ fun MainScreen(
             }
         }
     }
-
 }
-
 @OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -> Unit) {
     val color by animateColorAsState(
         targetValue = if (todo.done) Color(0xff24d65f) else Color(
             0xffff6363
-        ), animationSpec = tween(500)
+        ), animationSpec = tween(500), label = ""
     )
 
     Box(modifier = Modifier.fillMaxWidth().animateItemPlacement(

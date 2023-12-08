@@ -21,4 +21,8 @@ interface DAO {
 
     @Delete
     fun deleteTask(todo: TodoEntity)
+
+    @Query("SELECT * FROM `tasks` WHERE `done` = :isCompleted")
+    fun getTasksByCompletionStatus(isCompleted: Boolean): Flow<List<TodoEntity>>
+
 }

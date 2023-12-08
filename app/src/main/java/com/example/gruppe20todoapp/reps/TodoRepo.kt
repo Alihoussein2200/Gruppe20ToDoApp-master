@@ -8,4 +8,6 @@ interface TodoRepo {
     suspend fun addTasks(todo: TodoEntity)
     suspend fun updateTasks(todo: TodoEntity)
     suspend fun deleteTasks(todo: TodoEntity)
+    suspend fun getTasksByCompletion(isCompleted: Boolean): Flow<List<TodoEntity>>
+
 }

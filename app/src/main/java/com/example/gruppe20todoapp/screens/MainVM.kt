@@ -45,4 +45,12 @@ class MainVM:ViewModel(),KoinComponent {
             repo.addTasks(todo)
         }
     }
+    fun getTodosByCompletion(isCompleted: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.getTasksByCompletion(isCompleted).collect { data ->
+                _tasks.update { data }
+            }
+        }
+    }
+
 }
