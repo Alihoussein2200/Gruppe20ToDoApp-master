@@ -78,11 +78,13 @@ class MainVM:ViewModel(),KoinComponent {
         getTodos()
     }
 
-fun editTodo(todo: TodoEntity) {
-    viewModelScope.launch(Dispatchers.IO) {
-        repo.updateTasks(todo)
+    fun editTodo(todo: TodoEntity, newTitle: String, newDescription: String) {
+        viewModelScope.launch {
+            val updatedTodo = todo.copy(title = newTitle, description = newDescription)
+            updateTodo(updatedTodo)
+        }
     }
-}
+
 fun searchTodos(searchQuery: String) {
     viewModelScope.launch(Dispatchers.IO) {
         repo.searchTasks(searchQuery).collect { data ->

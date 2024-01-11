@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,6 +77,26 @@ fun MainScreen(
     val tasks by viewModel.tasks.collectAsState()
     val (dialogOpen, setDialogOpen) = remember {
         mutableStateOf(false)
+    }
+
+    var showEditDialog by remember { mutableStateOf(false) }
+    var currentEditingItem by remember { mutableStateOf<TodoEntity?>(null) }
+
+    if (showEditDialog) {
+        EditTaskDialog(
+            task = currentEditingItem,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { title, description ->
+                currentEditingItem?.let { todo ->
+                    viewModel.editTodo(
+                        todo = todo,
+                        newTitle = title,
+                        newDescription = description
+                    )
+                }
+                showEditDialog = false
+            }
+        )
     }
 
     if (dialogOpen) {
@@ -115,7 +139,7 @@ fun MainScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     label = {
-                        Text(text = "Sub Title")
+                        Text(text = "Description")
                     }, colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Color.White,
                         focusedLabelColor = Color.White,
@@ -153,7 +177,7 @@ fun MainScreen(
         topBar = {
             Box(
                 modifier = Modifier
-                    .shadow(4.dp) // Adjust the elevation to your preference
+                    .shadow(4.dp)
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primary)
             ) {
@@ -229,11 +253,18 @@ fun MainScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(tasks.sortedBy { it.done }, key = { it.id }) { todo ->
-                            TodoItem(todo = todo, onClick = {
+                            TodoItem(todo = todo,
+                                onClick = {
                                 viewModel.updateTodo(todo.copy(done = !todo.done))
-                            }, onDelete = {
+                            },
+                                onEdit = {
+                                    currentEditingItem = todo
+                                    showEditDialog = true
+                                },
+                                onDelete = {
                                 viewModel.deleteTodo(todo)
-                            })
+                            }
+                            )
                         }
                             }
                         }
@@ -288,7 +319,7 @@ fun FilterButton(text: String, selected: Boolean, onClick: () -> Unit) {
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
     @Composable
-    fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -> Unit) {
+    fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -> Unit, onEdit: () -> Unit) {
         val color by animateColorAsState(
             targetValue = if (todo.done) Color(0xff24d65f) else Color(
                 0xffff6363
@@ -358,21 +389,42 @@ fun FilterButton(text: String, selected: Boolean, onClick: () -> Unit) {
                         Text(text = todo.description, fontSize = 12.sp, color = Color(0xffebebeb))
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .size(25.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        tint = Color.White,
-                        contentDescription = null,
-                        modifier = Modifier.clickable {
-                            onDelete()
-                        })
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { onEdit() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = Color.White
+
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { onDelete() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.White
+
+                        )
+                    }
+
+
                 }
             }
 
@@ -387,3 +439,47 @@ fun FilterButton(text: String, selected: Boolean, onClick: () -> Unit) {
         }
 
     }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTaskDialog(
+    task: TodoEntity?,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    if (task == null) return
+
+    // State for input fields
+    var title by remember { mutableStateOf(task.title) }
+    var description by remember { mutableStateOf(task.description) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Edit Task") },
+        text = {
+            Column {
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") }
+                )
+                TextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(title, description) }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        }
+    )
+}
+
