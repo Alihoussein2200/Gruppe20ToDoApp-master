@@ -276,7 +276,6 @@ fun FilterButtons(viewModel: MainVM) {
 fun FilterButton(text: String, selected: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        // Change the colors based on whether the button is selected
         colors = ButtonDefaults.buttonColors(
             containerColor = if (selected) Dark100 else MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
