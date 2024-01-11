@@ -36,13 +36,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -55,13 +54,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-
 import  androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gruppe20todoapp.database.TodoEntity
 import com.example.gruppe20todoapp.database.addDate
@@ -71,10 +68,7 @@ import com.example.gruppe20todoapp.database.addDate
 fun MainScreen(
     viewModel: MainVM = viewModel()
 ) {
-    val (filterCompleted, setFilterCompleted) = remember { mutableStateOf(false) }
-
     val tasks by viewModel.tasks.collectAsState()
-
     val (dialogOpen, setDialogOpen) = remember {
         mutableStateOf(false)
     }
@@ -86,6 +80,8 @@ fun MainScreen(
         val (description, setDesc) = remember {
             mutableStateOf("")
         }
+
+
         Dialog(onDismissRequest = { setDialogOpen(false) }) {
             Column(
                 modifier = Modifier
@@ -143,117 +139,190 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text(text = "Submit", color = Color.White)
+                    Text(text = "Submit", fontSize = 18.sp, color = Color.White)
                 }
             }
         }
     }
 
 
+
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Filter by status", color = Color.White) },
-                modifier = Modifier.shadow(4.dp),
-                        colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.secondary), // Set TopAppBar color to match background
-                actions = {
-                    Switch(
-                        checked = filterCompleted,
-                        onCheckedChange = { isChecked ->
-                            setFilterCompleted(isChecked)
-                            viewModel.getTodosByCompletion(isChecked)
-                        }
-                    )
-                }
+        topBar = { TopAppBar(
+            title = { Text("Group 20 - MyTodoList APP", color = MaterialTheme.colorScheme.onPrimary) },
+            colors = TopAppBarDefaults.smallTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.secondary
             )
+        )
+
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     setDialogOpen(true)
                 },
-                contentColor = Color.White,
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Default.Add, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Add Task"
+                )
             }
         },
-        containerColor = MaterialTheme.colorScheme.secondary // Set the background color for the main screen
+        floatingActionButtonPosition = FabPosition.End,
+        containerColor = MaterialTheme.colorScheme.secondary
+
     ) { paddings ->
         Box(
             modifier = Modifier
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AnimatedVisibility(
-                visible = tasks.isEmpty(),
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddings)
             ) {
-                Text(text = "Ingen opgaver", fontSize = 22.sp)
-            }
-            AnimatedVisibility(
-                visible = tasks.isNotEmpty(),
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            top = 64.dp, // Increased top padding to avoid overlap with TopAppBar
-                            bottom = paddings.calculateBottomPadding() + 8.dp,
-                            start = 8.dp,
-                            end = 8.dp
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                FilterButtons(viewModel = viewModel)
+
+                AnimatedVisibility(
+                    visible = tasks.isEmpty(),
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
                 ) {
-                    items(tasks.sortedBy { it.done }, key = { it.id }) { todo ->
-                        TodoItem(todo = todo, onClick = { viewModel.updateTodo(
-                            todo.copy(done = !todo.done)
-                        ) }, onDelete = {
-                            viewModel.deleteTodo(todo)
-                        })
+
+                }
+                AnimatedVisibility(
+                    visible = tasks.isNotEmpty(),
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+
+                }
+                if (tasks.isEmpty()) {
+                    Text(text = "No Tasks", fontSize = 22.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = 8.dp,
+                                bottom = paddings.calculateBottomPadding() + 8.dp,
+                                start = 8.dp,
+                                end = 8.dp
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tasks.sortedBy { it.done }, key = { it.id }) { todo ->
+                            TodoItem(todo = todo, onClick = {
+                                viewModel.updateTodo(todo.copy(done = !todo.done))
+                            }, onDelete = {
+                                viewModel.deleteTodo(todo)
+                            })
+                        }
+                            }
+                        }
                     }
                 }
             }
         }
+
+@Composable
+fun FilterButtons(viewModel: MainVM) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Button(onClick = { viewModel.showCompletedTasks() }) {
+            Text("Completed")
+        }
+        Spacer(Modifier.size(8.dp))
+        Button(onClick = { viewModel.showNotCompletedTasks() }) {
+            Text("Not Completed")
+        }
+        Spacer(Modifier.size(8.dp))
+        Button(onClick = { viewModel.showAllTasks() }) {
+            Text("All")
+        }
     }
 }
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
-@Composable
-fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -> Unit) {
-    val color by animateColorAsState(
-        targetValue = if (todo.done) Color(0xff24d65f) else Color(
-            0xffff6363
-        ), animationSpec = tween(500), label = ""
-    )
 
-    Box(modifier = Modifier.fillMaxWidth().animateItemPlacement(
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+    @Composable
+    fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -> Unit) {
+        val color by animateColorAsState(
+            targetValue = if (todo.done) Color(0xff24d65f) else Color(
+                0xffff6363
+            ), animationSpec = tween(500), label = ""
         )
-    ), contentAlignment = Alignment.BottomEnd) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(5.dp))
-                .background(color)
-                .clickable {
-                    onClick()
-                }
-                .padding(
-                    horizontal = 8.dp,
-                    vertical = 16.dp
-                ),
-            horizontalArrangement = Arrangement.SpaceBetween
+
+        Box(
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ), contentAlignment = Alignment.BottomEnd
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(color)
+                    .clickable {
+                        onClick()
+                    }
+                    .padding(
+                        horizontal = 8.dp,
+                        vertical = 16.dp
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row {
+                            AnimatedVisibility(
+                                visible = todo.done,
+                                enter = scaleIn() + fadeIn(),
+                                exit = scaleOut() + fadeOut()
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = color)
+                            }
+                        }
+                        Row {
+                            AnimatedVisibility(
+                                visible = !todo.done,
+                                enter = scaleIn() + fadeIn(),
+                                exit = scaleOut() + fadeOut()
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = null, tint = color)
+                            }
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = todo.title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.White
+                        )
+                        Text(text = todo.description, fontSize = 12.sp, color = Color(0xffebebeb))
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .size(25.dp)
@@ -262,61 +331,24 @@ fun LazyItemScope.TodoItem(todo: TodoEntity, onClick: () -> Unit, onDelete: () -
                         .padding(4.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Row {
-                        AnimatedVisibility(
-                            visible = todo.done,
-                            enter = scaleIn() + fadeIn(),
-                            exit = scaleOut() + fadeOut()
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = color)
-                        }
-                    }
-                    Row {
-                        AnimatedVisibility(
-                            visible = !todo.done,
-                            enter = scaleIn() + fadeIn(),
-                            exit = scaleOut() + fadeOut()
-                        ) {
-                            Icon(Icons.Default.Close, contentDescription = null, tint = color)
-                        }
-                    }
-                }
-                Column {
-                    Text(
-                        text = todo.title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.White
-                    )
-                    Text(text = todo.description, fontSize = 12.sp, color = Color(0xffebebeb))
+                    Icon(
+                        Icons.Default.Delete,
+                        tint = Color.White,
+                        contentDescription = null,
+                        modifier = Modifier.clickable {
+                            onDelete()
+                        })
                 }
             }
-            Box(
-                modifier = Modifier
-                    .size(25.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    tint = Color.White,
-                    contentDescription = null,
-                    modifier = Modifier.clickable {
-                        onDelete()
-                    })
-            }
+
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = todo.addDate,
+                color = Color(0xffebebeb),
+                fontSize = 10.sp
+            )
+
+
         }
 
-        Text(
-            modifier = Modifier.padding(4.dp),
-            text = todo.addDate,
-            color = Color(0xffebebeb),
-            fontSize = 10.sp
-        )
-
-
     }
-
-}

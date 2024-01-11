@@ -8,6 +8,10 @@ interface TodoRepo {
     suspend fun addTasks(todo: TodoEntity)
     suspend fun updateTasks(todo: TodoEntity)
     suspend fun deleteTasks(todo: TodoEntity)
-    suspend fun getTasksByCompletion(isCompleted: Boolean): Flow<List<TodoEntity>>
+    suspend fun searchTasks(searchQuery: String): Flow<List<TodoEntity>>
+
+    fun getAllTasks(): Flow<List<TodoEntity>>
+    fun getCompletedTasks(): Flow<List<TodoEntity>>
+    fun getNotCompletedTasks(): Flow<List<TodoEntity>>
 
 }

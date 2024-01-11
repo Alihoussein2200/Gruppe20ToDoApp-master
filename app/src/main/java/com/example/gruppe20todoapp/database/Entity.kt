@@ -18,7 +18,7 @@ data class TodoEntity(
     @ColumnInfo("done")
     val done:Boolean = false,
     @ColumnInfo("added")
-    val added:Long = System.currentTimeMillis()
+    val added:Long = System.currentTimeMillis(),
 )
 
 val TodoEntity.addDate:String get() = SimpleDateFormat("yyyy/MM/dd hh:mm").format(Date(added))
