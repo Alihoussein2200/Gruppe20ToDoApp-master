@@ -54,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,6 +63,7 @@ import androidx.compose.ui.window.Dialog
 import  androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gruppe20todoapp.database.TodoEntity
 import com.example.gruppe20todoapp.database.addDate
+import com.example.gruppe20todoapp.ui.theme.Dark100
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -148,13 +150,20 @@ fun MainScreen(
 
 
     Scaffold(
-        topBar = { TopAppBar(
-            title = { Text("Group 20 - MyTodoList APP", color = MaterialTheme.colorScheme.onPrimary) },
-            colors = TopAppBarDefaults.smallTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.secondary
-            )
-        )
-
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .shadow(4.dp) // Adjust the elevation to your preference
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                TopAppBar(
+                    title = { Text("Group 20 - MyTodoList APP", color = MaterialTheme.colorScheme.onPrimary) },
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -184,6 +193,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddings)
+
             ) {
                 FilterButtons(viewModel = viewModel)
 
@@ -202,7 +212,10 @@ fun MainScreen(
 
                 }
                 if (tasks.isEmpty()) {
-                    Text(text = "No Tasks", fontSize = 22.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text(text = "No Tasks",
+                        fontSize = 22.sp,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                            .padding(top = 200.dp))
                 } else {
                     LazyColumn(
                         modifier = Modifier
@@ -231,25 +244,48 @@ fun MainScreen(
 
 @Composable
 fun FilterButtons(viewModel: MainVM) {
+    val filterState by viewModel.filterState.collectAsState()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        Button(onClick = { viewModel.showCompletedTasks() }) {
-            Text("Completed")
-        }
+        FilterButton(
+            text = "All",
+            selected = filterState == MainVM.FilterState.ALL,
+            onClick = { viewModel.showAllTasks() }
+        )
         Spacer(Modifier.size(8.dp))
-        Button(onClick = { viewModel.showNotCompletedTasks() }) {
-            Text("Not Completed")
-        }
+        FilterButton(
+            text = "Completed",
+            selected = filterState == MainVM.FilterState.COMPLETED,
+            onClick = { viewModel.showCompletedTasks() }
+        )
         Spacer(Modifier.size(8.dp))
-        Button(onClick = { viewModel.showAllTasks() }) {
-            Text("All")
-        }
+        FilterButton(
+            text = "Not Completed",
+            selected = filterState == MainVM.FilterState.NOT_COMPLETED,
+            onClick = { viewModel.showNotCompletedTasks() }
+        )
     }
 }
+
+@Composable
+fun FilterButton(text: String, selected: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        // Change the colors based on whether the button is selected
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) Dark100 else MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
+    ) {
+        Text(text)
+    }
+}
+
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
     @Composable

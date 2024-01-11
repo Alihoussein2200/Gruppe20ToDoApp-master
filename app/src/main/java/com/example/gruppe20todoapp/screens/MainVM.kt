@@ -6,6 +6,7 @@ import com.example.gruppe20todoapp.database.TodoEntity
 import com.example.gruppe20todoapp.reps.TodoRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,6 +17,7 @@ class MainVM:ViewModel(),KoinComponent {
     private val repo: TodoRepo by inject()
     private val _filterState: MutableStateFlow<FilterState> = MutableStateFlow(FilterState.ALL)
     private val _tasks:MutableStateFlow<List<TodoEntity>> = MutableStateFlow(emptyList())
+    val filterState: StateFlow<FilterState> = _filterState.asStateFlow()
     val tasks = _tasks.asStateFlow()
 
     init {
