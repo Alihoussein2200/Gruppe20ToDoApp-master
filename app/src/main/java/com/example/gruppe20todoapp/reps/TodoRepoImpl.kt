@@ -13,7 +13,11 @@ class TodoRepoImpl(private val database: Database): TodoRepo {
     override suspend fun deleteTasks(todo: TodoEntity) = dao.deleteTask(todo)
 
     override suspend fun searchTasks(searchQuery: String): Flow<List<TodoEntity>> {
-        return dao.searchTasks("%$searchQuery%")
+        return if (searchQuery.isEmpty()) {
+            dao.getAllTasks()
+        } else {
+            dao.searchTasks("%$searchQuery%")
+        }
     }
     override fun getAllTasks(): Flow<List<TodoEntity>> {
         return dao.getAllTasks()
@@ -24,5 +28,7 @@ class TodoRepoImpl(private val database: Database): TodoRepo {
     override fun getNotCompletedTasks(): Flow<List<TodoEntity>> {
         return dao.getNotCompletedTasks()
     }
+
+
 }
 

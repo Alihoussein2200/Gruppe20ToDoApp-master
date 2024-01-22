@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace 'com.example.gruppe20todoapp'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.gruppe20todoapp"
@@ -15,6 +15,8 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "GIPHY_API_KEY", "\"D32Hq4fRCQUUZuYgVbWYC0k7HAtQ41iO\""
+        android.buildFeatures.buildConfig true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -49,7 +51,7 @@ android {
 }
 
 dependencies {
-
+    implementation "androidx.compose.ui:ui:<compose_version>"
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
     implementation 'androidx.activity:activity-compose:1.5.1'
@@ -81,5 +83,20 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
     kapt "androidx.room:room-compiler:$room_version"
+
+    // Retrofit for network requests
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+
+    // Coil for image loading
+    implementation 'io.coil-kt:coil-compose:2.5.0'
+
+    //Glide for gifs:
+    implementation 'com.github.bumptech.glide:glide:4.12.0' // replace with the latest version
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
+
+
+
+
 
 }

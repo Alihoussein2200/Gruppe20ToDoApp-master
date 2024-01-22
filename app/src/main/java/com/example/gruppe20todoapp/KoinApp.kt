@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.gruppe20todoapp.database.Database
 import com.example.gruppe20todoapp.reps.TodoRepo
 import com.example.gruppe20todoapp.reps.TodoRepoImpl
+import com.example.gruppe20todoapp.utility.RetrofitInstance
 import org.koin.core.context.startKoin
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -22,6 +23,9 @@ class KoinApp : Application() {
                 single {
                     TodoRepoImpl(database = get())
                 } bind TodoRepo::class
+
+                // Provide Retrofit and GiphyApiService
+                single { RetrofitInstance.giphyApiService }
             })
         }
     }
